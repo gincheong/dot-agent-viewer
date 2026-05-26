@@ -8,9 +8,14 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build && electron-builder",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src --ext .ts,.tsx",
+    "test:unit": "vitest run tests/unit",
+    "test:watch": "vitest tests/unit",
+    "bench": "vitest bench tests/perf"
   },
   "dependencies": {
+    "fast-glob": "^3.3.3",
+    "gray-matter": "^4.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -25,6 +30,7 @@
     "electron-vite": "^2.3.0",
     "eslint": "^8.57.0",
     "typescript": "^5.4.5",
-    "vite": "^5.3.1"
+    "vite": "^5.3.1",
+    "vitest": "^4.1.7"
   }
 }

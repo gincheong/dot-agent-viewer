@@ -16,5 +16,5 @@
     }
   },
   "include": ["src/renderer/**/*", "src/shared/**/*"],
-  "exclude": ["node_modules", "out", "dist"]
+  "exclude": ["node_modules", "out", "dist", "src/shared/defaults.ts"]
 }
