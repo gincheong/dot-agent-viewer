@@ -15,6 +15,8 @@ export type AppState = {
   search: string
   filterChips: FilterChip[]
   scannedAt: number | null
+  loading: boolean
+  error: string | null
 }
 
 export type AppActions = {
@@ -22,6 +24,7 @@ export type AppActions = {
   setSearch: (s: string) => void
   toggleChip: (key: string, value: string) => void
   replaceAll: (result: ScanResult) => void
+  rescan: () => Promise<void>
 }
 
 export type AppStore = AppState & AppActions
@@ -29,15 +32,10 @@ export type AppStore = AppState & AppActions
 const CLAUDE_ROOT: AgentRoot = { name: 'Claude', path: '/Users/evan/.claude' }
 const GEMINI_ROOT: AgentRoot = { name: 'Gemini', path: '/Users/evan/.gemini' }
 
-// Mock data — replaced by IPC-backed rescan in Phase D. Covers:
-//  - agents-hub commands + skills (with symlinks to both Claude and Gemini)
-//  - agent-local (~/.gemini/GEMINI.md as a regular file)
-//  - external-link (target outside ~/.agents)
-//  - description block-scalar (raw + collapsed oneLine)
-//  - nested metadata object (depth-1 recursion case)
-//  - 13-token allowed-tools comma list (>10 fallback case for chip generator)
-//  - one broken symlink
-const MOCK_SOURCES: SourceItem[] = [
+// Mock fixture preserved for unit tests (store + component tests can import
+// this directly to seed deterministic data). Phase D moved the runtime data
+// path onto IPC (`window.dotAgent.rescan()`); this export is test-only.
+export const __mockSourcesForTests: SourceItem[] = [
   {
     kind: 'command',
     provenance: 'agents-hub',
@@ -84,8 +82,6 @@ const MOCK_SOURCES: SourceItem[] = [
       model: 'opus',
       description:
         'Jira issue key or URL → context → code work → suggested commit message',
-      // 13-token comma list — exceeds the chip generator cap (>10) so it falls back
-      // to "Show full" text behaviour in the table.
       'allowed-tools':
         'Bash, Read, Edit, Write, Glob, Grep, WebFetch, mcp__jira, mcp__playwright, mcp__figma, NotebookEdit, TodoWrite, SendUserFile',
     },
@@ -106,8 +102,6 @@ const MOCK_SOURCES: SourceItem[] = [
     provenance: 'agents-hub',
     name: 'gh-stack',
     description: {
-      // Raw block-scalar style from the wild. `oneLine` collapses newlines and
-      // trims runs of whitespace so the sidebar renders a single tight string.
       raw: 'Manage stacked branches and pull requests with gh-stack.\nTriggers on stacked diffs, dependent PRs, branch chains.\n',
       oneLine:
         'Manage stacked branches and pull requests with gh-stack. Triggers on stacked diffs, dependent PRs, branch chains.',
@@ -119,7 +113,6 @@ const MOCK_SOURCES: SourceItem[] = [
       name: 'gh-stack',
       description:
         'Manage stacked branches and pull requests with gh-stack.\nTriggers on stacked diffs, dependent PRs, branch chains.\n',
-      // Nested object — exercises FrontmatterTable depth-1 recursion.
       metadata: {
         author: 'evan',
         version: '0.4.2',
@@ -145,7 +138,6 @@ const MOCK_SOURCES: SourceItem[] = [
       },
     ],
   },
-  // Broken symlink: target deleted between scans.
   {
     kind: 'command',
     provenance: 'agents-hub',
@@ -170,8 +162,6 @@ const MOCK_SOURCES: SourceItem[] = [
       },
     ],
   },
-  // Agent-local: ~/.gemini/GEMINI.md as a regular file (not a symlink). No
-  // hub counterpart, no inbound symlinks. Demonstrates the `missing`-status row.
   {
     kind: 'command',
     provenance: 'agent-local',
@@ -191,7 +181,6 @@ const MOCK_SOURCES: SourceItem[] = [
     symlinks: [],
     ownerAgentRoot: GEMINI_ROOT,
   },
-  // External-link: symlink in ~/.claude/commands pointing OUTSIDE ~/.agents.
   {
     kind: 'command',
     provenance: 'external-link',
@@ -216,14 +205,16 @@ const MOCK_SOURCES: SourceItem[] = [
   },
 ]
 
-export const useAppStore = create<AppStore>((set) => ({
-  // state
-  sources: MOCK_SOURCES,
-  agents: [CLAUDE_ROOT, GEMINI_ROOT],
-  selectedAbsPath: MOCK_SOURCES[0]?.absPath ?? null,
+export const useAppStore = create<AppStore>((set, get) => ({
+  // state — empty initial; populated by `rescan()` from App.tsx mount.
+  sources: [],
+  agents: [],
+  selectedAbsPath: null,
   search: '',
   filterChips: [],
-  scannedAt: Date.now(),
+  scannedAt: null,
+  loading: false,
+  error: null,
 
   // actions
   select: (absPath) => set({ selectedAbsPath: absPath }),
@@ -246,4 +237,42 @@ export const useAppStore = create<AppStore>((set) => ({
       agents: result.agents,
       scannedAt: result.scannedAt,
     }),
+  rescan: async () => {
+    // Test-mode short-circuit: Playwright's `addInitScript` injects a known
+    // ScanResult onto `window.__testScanResult` to bypass IPC. Check this
+    // FIRST so the IPC path is never touched in e2e fixtures.
+    if (typeof window !== 'undefined' && window.__testScanResult) {
+      const fixture = window.__testScanResult
+      set({
+        sources: fixture.sources,
+        agents: fixture.agents,
+        scannedAt: fixture.scannedAt,
+        loading: false,
+        error: null,
+      })
+      return
+    }
+
+    // Production / dev: real IPC via the contextBridge.
+    if (typeof window === 'undefined' || !window.dotAgent) {
+      // jsdom unit tests reach this branch; no-op cleanly.
+      return
+    }
+
+    if (get().loading) return
+    set({ loading: true, error: null })
+    try {
+      const result = await window.dotAgent.rescan()
+      set({
+        sources: result.sources,
+        agents: result.agents,
+        scannedAt: result.scannedAt,
+        loading: false,
+        error: null,
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      set({ loading: false, error: message })
+    }
+  },
 }))

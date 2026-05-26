@@ -1,6 +1,10 @@
+import { useMemo } from 'react'
+
+import { useFuse } from '../hooks/useFuse'
 import { useAppStore } from '../store/useAppStore'
 import { EmptyState } from './EmptyState'
 import { SourceListItem } from './SourceListItem'
+import type { FilterChip } from '../store/useAppStore'
 import type { Provenance, SourceItem } from '../../shared/types'
 
 type Group = {
@@ -18,15 +22,29 @@ const GROUP_TITLES: Record<Provenance, string> = {
 
 export function SourceList(): JSX.Element {
   const sources = useAppStore((s) => s.sources)
+  const search = useAppStore((s) => s.search)
+  const filterChips = useAppStore((s) => s.filterChips)
+
+  // Phase D: fuse → chip filter → bucket. Each stage returns the same
+  // SourceItem identities so React keys stay stable.
+  const textNarrowed = useFuse(sources, search)
+  const filtered = useMemo(
+    () => applyChipFilters(textNarrowed, filterChips),
+    [textNarrowed, filterChips],
+  )
 
   if (sources.length === 0) {
     return <EmptyState variant="no-sources" />
   }
 
+  if (filtered.length === 0) {
+    return <EmptyState variant="no-matches" />
+  }
+
   const groups: Group[] = GROUP_ORDER.map((id) => ({
     id,
     title: GROUP_TITLES[id],
-    items: sources
+    items: filtered
       .filter((s) => s.provenance === id)
       .sort((a, b) =>
         a.kind === b.kind
@@ -54,4 +72,39 @@ export function SourceList(): JSX.Element {
       ))}
     </>
   )
+}
+
+/**
+ * AND across chips: an item matches a chip iff its `frontmatter[chip.key]`
+ * contains `chip.value` in one of three shapes:
+ *   - string equal (case-insensitive) or comma-list token equal
+ *   - array containing the value as a string element
+ */
+export function applyChipFilters(
+  items: SourceItem[],
+  chips: FilterChip[],
+): SourceItem[] {
+  if (chips.length === 0) return items
+  return items.filter((item) =>
+    chips.every((chip) => matchesChip(item, chip)),
+  )
+}
+
+function matchesChip(item: SourceItem, chip: FilterChip): boolean {
+  const value = (item.frontmatter as Record<string, unknown>)[chip.key]
+  if (value === undefined || value === null) return false
+
+  const target = chip.value
+  if (typeof value === 'string') {
+    if (value === target) return true
+    // comma-list tokens — trim each side so "a, b, c" matches "b".
+    return value
+      .split(',')
+      .map((s) => s.trim())
+      .includes(target)
+  }
+  if (Array.isArray(value)) {
+    return value.some((el) => typeof el === 'string' && el === target)
+  }
+  return false
 }

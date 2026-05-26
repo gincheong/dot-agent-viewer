@@ -7,14 +7,18 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build && electron-builder",
+    "build:dev": "electron-vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint src --ext .ts,.tsx",
     "test:unit": "vitest run tests/unit",
     "test:watch": "vitest tests/unit",
+    "test:e2e": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e",
     "bench": "vitest bench tests/perf"
   },
   "dependencies": {
     "fast-glob": "^3.3.3",
+    "fuse.js": "^7.3.0",
     "gray-matter": "^4.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -23,6 +27,7 @@
     "zustand": "^4.5.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.0.1",
     "@types/node": "^20.14.0",
@@ -35,6 +40,7 @@
     "electron-vite": "^2.3.0",
     "eslint": "^8.57.0",
     "jsdom": "^25.0.0",
+    "playwright": "^1.60.0",
     "typescript": "^5.4.5",
     "vite": "^5.3.1",
     "vitest": "^4.1.7"

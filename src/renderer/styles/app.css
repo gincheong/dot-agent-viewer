@@ -610,3 +610,29 @@ input[type='search'] {
 .empty-state__icon {
   font-size: var(--fs-20);
 }
+
+/* Loading shimmer --------------------------------------------------------- */
+.list-shimmer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.list-shimmer__row {
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-elevated) 0%,
+    var(--color-bg-hover) 50%,
+    var(--color-bg-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

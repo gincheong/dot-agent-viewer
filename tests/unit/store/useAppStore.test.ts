@@ -2,13 +2,25 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { ScanResult } from '../../../src/shared/types'
-import { useAppStore } from '../../../src/renderer/store/useAppStore'
+import {
+  __mockSourcesForTests,
+  useAppStore,
+} from '../../../src/renderer/store/useAppStore'
 
 describe('useAppStore', () => {
-  // Snapshot the initial state once so each test can re-seed deterministically.
+  // Snapshot the initial (empty) state, then re-seed each test with the
+  // mock fixture so we exercise the store against realistic shapes.
   const initial = useAppStore.getState()
   beforeEach(() => {
-    useAppStore.setState(initial, true)
+    useAppStore.setState(
+      {
+        ...initial,
+        sources: __mockSourcesForTests,
+        selectedAbsPath: __mockSourcesForTests[0]?.absPath ?? null,
+        scannedAt: Date.now(),
+      },
+      true,
+    )
   })
 
   it('select() updates selectedAbsPath', () => {
