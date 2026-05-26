@@ -6,14 +6,11 @@ import type {
   SourceItem,
 } from '../../shared/types'
 
-export type FilterChip = { key: string; value: string }
-
 export type AppState = {
   sources: SourceItem[]
   agents: AgentRoot[]
   selectedAbsPath: string | null
   search: string
-  filterChips: FilterChip[]
   scannedAt: number | null
   loading: boolean
   error: string | null
@@ -22,7 +19,6 @@ export type AppState = {
 export type AppActions = {
   select: (absPath: string | null) => void
   setSearch: (s: string) => void
-  toggleChip: (key: string, value: string) => void
   replaceAll: (result: ScanResult) => void
   rescan: () => Promise<void>
 }
@@ -211,7 +207,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   agents: [],
   selectedAbsPath: null,
   search: '',
-  filterChips: [],
   scannedAt: null,
   loading: false,
   error: null,
@@ -219,18 +214,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   // actions
   select: (absPath) => set({ selectedAbsPath: absPath }),
   setSearch: (s) => set({ search: s }),
-  toggleChip: (key, value) =>
-    set((state) => {
-      const exists = state.filterChips.some(
-        (c) => c.key === key && c.value === value,
-      )
-      const next = exists
-        ? state.filterChips.filter(
-            (c) => !(c.key === key && c.value === value),
-          )
-        : [...state.filterChips, { key, value }]
-      return { filterChips: next }
-    }),
   replaceAll: (result) =>
     set({
       sources: result.sources,

@@ -1,13 +1,12 @@
-import { FilterChips } from './FilterChips'
 import { ScanStaleLabel } from './ScanStaleLabel'
 import { SearchBar } from './SearchBar'
 import { SourceList } from './SourceList'
 import { useAppStore } from '../store/useAppStore'
 
 /**
- * Left pane: top bar (stale label + refresh button) + search + filter chips +
- * source list. ⌘R wiring lives in App; the RefreshButton here is a passive
- * placeholder that Phase E will wire to `window.dotAgent.rescan()`.
+ * Left pane: top bar (stale label + refresh button) + search + source list.
+ * ⌘R wiring lives in App; the RefreshButton here is a passive placeholder
+ * that Phase E will wire to `window.dotAgent.rescan()`.
  */
 export function Sidebar(): JSX.Element {
   const loading = useAppStore((s) => s.loading)
@@ -30,7 +29,6 @@ export function Sidebar(): JSX.Element {
           </button>
         </div>
         <SearchBar />
-        <FilterChips />
       </div>
       <div className="sidebar__scroll">
         {showShimmer ? <ListShimmer /> : <SourceList />}

@@ -113,3 +113,61 @@ describe('normalizeDescription', () => {
     expect(out!.oneLine).toBe('{"a":1}')
   })
 })
+
+describe('security: gray-matter JavaScript-engine eval is blocked', () => {
+  // gray-matter v4 ships an `engines.javascript` parser that calls `eval(str)`
+  // on the frontmatter body when the file's first line is `---javascript`.
+  // Our parseFrontmatterContent pins language: 'yaml' + a custom yaml-only
+  // engines map so the JS engine is unreachable.
+  //
+  // If this test ever fails (status: 'present', side-effect observed), the
+  // safe options have been bypassed and the regression must be fixed before
+  // any further release.
+  it('does NOT eval a ---javascript frontmatter payload', () => {
+    let evalSentinel = false
+    // Hostile payload: if gray-matter ever dispatched to engines.javascript,
+    // this would set our sentinel inside the renderer's global scope.
+    const content = [
+      '---javascript',
+      "globalThis.__EVAL_SENTINEL__ = true",
+      '---',
+      '# body',
+    ].join('\n')
+
+    const before = (globalThis as Record<string, unknown>).__EVAL_SENTINEL__
+    expect(before).toBeUndefined()
+
+    const parsed = parseFrontmatterContent(content)
+
+    const after = (globalThis as Record<string, unknown>).__EVAL_SENTINEL__
+    evalSentinel = after === true
+    expect(evalSentinel).toBe(false)
+    // Either:
+    //   - 'absent' (our stricter delimiter regex `^---\s*\r?\n` rejects
+    //     `---javascript` before matter() is invoked — defense in depth), or
+    //   - 'malformed' (matter would throw on the non-YAML body), or
+    //   - 'present' with empty data (no eval side-effect).
+    // 'present' with a side-effect is never acceptable.
+    expect(['absent', 'malformed', 'present']).toContain(parsed.frontmatterStatus)
+  })
+
+  it('a ---javascript payload that matches our stricter delimiter still parses through yaml engine only', () => {
+    let evalSentinel = false
+    // Some implementations require `---javascript\n` to dispatch the JS engine.
+    // Our hasFrontmatterDelimiter rejects that; this test confirms the
+    // delimiter regex is the first line of defense.
+    const content = ['---javascript', "globalThis.__EVAL_SENTINEL__ = true", '---'].join('\n')
+    const parsed = parseFrontmatterContent(content)
+    const after = (globalThis as Record<string, unknown>).__EVAL_SENTINEL__
+    evalSentinel = after === true
+    expect(evalSentinel).toBe(false)
+    expect(parsed.frontmatterStatus).toBe('absent')
+  })
+
+  it('parses a normal YAML frontmatter as YAML (regression guard)', () => {
+    const content = ['---', 'model: opus', '---', '# body'].join('\n')
+    const parsed = parseFrontmatterContent(content)
+    expect(parsed.frontmatterStatus).toBe('present')
+    expect(parsed.frontmatter).toEqual({ model: 'opus' })
+  })
+})

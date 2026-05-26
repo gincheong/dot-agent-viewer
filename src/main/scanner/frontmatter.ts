@@ -3,8 +3,31 @@
 
 import { promises as fs } from 'fs'
 import matter from 'gray-matter'
+import yaml from 'js-yaml'
 
 import type { Description, FrontmatterStatus } from '../../shared/types'
+
+/**
+ * Safe gray-matter options.
+ *
+ * IMPORTANT (security): gray-matter v4 ships an `engines.javascript` parser
+ * that calls `eval()` on the frontmatter body when the file's first line is
+ * `---javascript`. We pin `language: 'yaml'` AND override the engines map so
+ * only the YAML engine (powered by js-yaml's default schema, which has no
+ * eval / code-execution support) is ever invoked. A hostile `.md` containing
+ * a `---javascript` block now parses through the yaml engine and either
+ * succeeds (returning data) or fails (returning malformed status). It can
+ * never reach `eval`.
+ */
+const SAFE_MATTER_OPTS = {
+  language: 'yaml',
+  engines: {
+    yaml: {
+      parse: (s: string): object => (yaml.load(s) as object) ?? {},
+      stringify: (o: object): string => yaml.dump(o),
+    },
+  },
+} as const
 
 export type ParsedFrontmatter = {
   frontmatter: Record<string, unknown>
@@ -78,7 +101,7 @@ export function parseFrontmatterContent(content: string): ParsedFrontmatter {
   }
 
   try {
-    const parsed = matter(content)
+    const parsed = matter(content, SAFE_MATTER_OPTS)
     const data = (parsed.data ?? {}) as Record<string, unknown>
     return {
       frontmatter: data,

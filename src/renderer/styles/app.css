@@ -56,7 +56,8 @@ input[type='search'] {
   flex-direction: column;
   background: var(--color-bg-elevated);
   border-right: 1px solid var(--color-border);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebar__topbar {
@@ -76,7 +77,6 @@ input[type='search'] {
 
 .sidebar__scroll {
   flex: 1 1 auto;
-  overflow-y: auto;
   padding: var(--space-2) 0;
 }
 
@@ -97,37 +97,6 @@ input[type='search'] {
   background: transparent;
   outline: none;
   font-size: var(--fs-13);
-}
-
-/* Filter chips ------------------------------------------------------------- */
-.filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-}
-
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 2px var(--space-2);
-  border-radius: 999px;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  font-size: var(--fs-12);
-  color: var(--color-fg-muted);
-  cursor: pointer;
-  transition: background-color 0.08s ease;
-}
-
-.filter-chip:hover {
-  background: var(--color-bg-hover);
-}
-
-.filter-chip[data-active='true'] {
-  background: var(--color-accent-bg);
-  color: var(--color-accent);
-  border-color: var(--color-accent);
 }
 
 /* Scan stale label --------------------------------------------------------- */
@@ -655,6 +624,10 @@ input[type='search'] {
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

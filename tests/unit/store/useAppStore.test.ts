@@ -36,27 +36,6 @@ describe('useAppStore', () => {
     expect(useAppStore.getState().search).toBe('make-pr')
   })
 
-  it('toggleChip() adds a chip on first call and removes it on the second', () => {
-    const { toggleChip } = useAppStore.getState()
-    toggleChip('model', 'opus')
-    expect(useAppStore.getState().filterChips).toEqual([
-      { key: 'model', value: 'opus' },
-    ])
-
-    toggleChip('model', 'opus')
-    expect(useAppStore.getState().filterChips).toEqual([])
-  })
-
-  it('toggleChip() accumulates distinct chips', () => {
-    const { toggleChip } = useAppStore.getState()
-    toggleChip('model', 'opus')
-    toggleChip('allowed-tools', 'Bash')
-    expect(useAppStore.getState().filterChips).toEqual([
-      { key: 'model', value: 'opus' },
-      { key: 'allowed-tools', value: 'Bash' },
-    ])
-  })
-
   it('replaceAll() swaps sources, agents and scannedAt', () => {
     const newResult: ScanResult = {
       sources: [],
