@@ -13,6 +13,7 @@ export function Sidebar(): JSX.Element {
   const loading = useAppStore((s) => s.loading)
   const empty = useAppStore((s) => s.sources.length === 0)
   const showShimmer = loading && empty
+  const rescan = useAppStore((s) => s.rescan)
 
   return (
     <aside className="sidebar" aria-label="Source list">
@@ -23,7 +24,7 @@ export function Sidebar(): JSX.Element {
             type="button"
             className="refresh-button"
             title="Refresh (⌘R)"
-            onClick={() => console.log('[stub] rescan')}
+            onClick={() => void rescan()}
           >
             ↻ Refresh
           </button>

@@ -1,15 +1,23 @@
-// IPC handler registration for scanner + config channels.
-// Phase B exposes: scanner:rescan, scanner:status, config:get-roots.
-// Action and appearance channels are wired in Phase E.
+// IPC handler registration for scanner + config + action + appearance channels.
+// Phase B exposed scanner / config; Phase E adds action:* + system:appearance
+// (invoke/handle) plus system:appearance-changed broadcast (send to renderer).
 
-import { ipcMain } from 'electron'
+import { BrowserWindow, ipcMain, nativeTheme } from 'electron'
 
-import { IPC } from '../shared/ipc'
+import { IPC, EVENTS } from '../shared/ipc'
 import type {
+  ActionCopyBodyRequest,
+  ActionCopyBodyResponse,
+  ActionCopyPathRequest,
+  ActionCopyPathResponse,
+  ActionOpenEditorRequest,
+  ActionOpenEditorResponse,
   ConfigGetRootsResponse,
   ScannerRescanResponse,
   ScannerStatusResponse,
+  SystemAppearanceResponse,
 } from '../shared/ipc'
+import { getHandlers } from './actions'
 import { loadUserConfig } from './scanner/config'
 import { runScan } from './scanner'
 
@@ -50,6 +58,19 @@ async function performScan(): Promise<ScannerRescanResponse> {
   return inFlight
 }
 
+function currentTheme(): 'light' | 'dark' {
+  return nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
+}
+
+function broadcastAppearance(): void {
+  const theme = currentTheme()
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send(EVENTS.SYSTEM_APPEARANCE_CHANGED, { theme })
+  }
+}
+
+let appearanceListenerAttached = false
+
 export function registerIpcHandlers(): void {
   ipcMain.handle(IPC.SCANNER_RESCAN, async (): Promise<ScannerRescanResponse> => {
     return performScan()
@@ -63,4 +84,38 @@ export function registerIpcHandlers(): void {
     const loaded = await loadUserConfig()
     return { roots: loaded.config.roots, configPath: loaded.configPath }
   })
+
+  // Action handlers route through the registry indirection so Playwright spies
+  // can replace them at runtime without env-flag short-circuits in production.
+  ipcMain.handle(
+    IPC.ACTION_OPEN_EDITOR,
+    async (_e, req: ActionOpenEditorRequest): Promise<ActionOpenEditorResponse> => {
+      return getHandlers().openEditor(req.absPath)
+    },
+  )
+
+  ipcMain.handle(
+    IPC.ACTION_COPY_PATH,
+    async (_e, req: ActionCopyPathRequest): Promise<ActionCopyPathResponse> => {
+      return getHandlers().copyPath(req.absPath)
+    },
+  )
+
+  ipcMain.handle(
+    IPC.ACTION_COPY_BODY,
+    async (_e, req: ActionCopyBodyRequest): Promise<ActionCopyBodyResponse> => {
+      return getHandlers().copyBody(req.body)
+    },
+  )
+
+  ipcMain.handle(IPC.SYSTEM_APPEARANCE, async (): Promise<SystemAppearanceResponse> => {
+    return { theme: currentTheme() }
+  })
+
+  // Forward nativeTheme changes to every renderer window. Idempotent guard so
+  // repeated registerIpcHandlers() calls (in dev) don't stack listeners.
+  if (!appearanceListenerAttached) {
+    nativeTheme.on('updated', broadcastAppearance)
+    appearanceListenerAttached = true
+  }
 }

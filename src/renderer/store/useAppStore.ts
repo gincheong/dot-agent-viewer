@@ -241,12 +241,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
     // Test-mode short-circuit: Playwright's `addInitScript` injects a known
     // ScanResult onto `window.__testScanResult` to bypass IPC. Check this
     // FIRST so the IPC path is never touched in e2e fixtures.
+    //
+    // We re-stamp `scannedAt: Date.now()` on every test-mode rescan so the
+    // staleness flow ("⌘R resets the pill") works under Playwright's fake
+    // clock — the fixture's static timestamp would never reset otherwise.
     if (typeof window !== 'undefined' && window.__testScanResult) {
       const fixture = window.__testScanResult
       set({
         sources: fixture.sources,
         agents: fixture.agents,
-        scannedAt: fixture.scannedAt,
+        scannedAt: Date.now(),
         loading: false,
         error: null,
       })

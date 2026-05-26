@@ -13,6 +13,17 @@ export const IPC = {
   SYSTEM_APPEARANCE: 'system:appearance',
 } as const
 
+// One-way event channels (main → renderer via webContents.send).
+// Kept separate from `IPC` (which is invoke/handle only) so the IpcChannels
+// type below stays consistent.
+export const EVENTS = {
+  APP_RESCAN_REQUEST: 'app:rescan-request',
+  SYSTEM_APPEARANCE_CHANGED: 'system:appearance-changed',
+} as const
+
+export type AppRescanRequestEvent = void
+export type SystemAppearanceChangedEvent = { theme: 'light' | 'dark' }
+
 export type ScannerRescanRequest = { extraRootsPath?: string }
 export type ScannerRescanResponse = ScanResult
 

@@ -12,7 +12,7 @@ export default function App(): JSX.Element {
   const hasLoaded = useAppStore((s) => s.scannedAt !== null)
 
   // Boot scan: pull real data via IPC (or the Playwright test-result fixture
-  // injected onto window) once on mount. Subsequent rescans (⌘R, Phase E)
+  // injected onto window) once on mount. Subsequent rescans (⌘R, Refresh)
   // do NOT block the UI — just update once data arrives.
   useEffect(() => {
     if (!hasLoaded) {
@@ -22,17 +22,16 @@ export default function App(): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ⌘R is a passive placeholder in Phase D — Phase E wires real rescan via
-  // an Accelerator + visible Refresh button.
+  // ⌘R is dispatched by the main-process menu accelerator
+  // (see src/main/index.ts → "View → Refresh"). The renderer subscribes via
+  // the preload bridge and calls rescan from the latest store snapshot.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r') {
-        e.preventDefault()
-        console.log('[stub] ⌘R rescan — wired in Phase E')
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const bridge = typeof window !== 'undefined' ? window.dotAgent : undefined
+    if (!bridge) return
+    const unsubscribe = bridge.onRescanRequest(() => {
+      void useAppStore.getState().rescan()
+    })
+    return unsubscribe
   }, [])
 
   return (
