@@ -23,7 +23,6 @@ export function SearchBar(): JSX.Element {
     }
     // We intentionally do NOT depend on storeSearch — this effect is one-way
     // (local → store). External resets to the store would loop without this.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced, setSearch])
 
   return (

@@ -23,7 +23,7 @@ export function installDefaultHandlers(): void {
     // can install spies. The runtime guard ensures this never appears in
     // production bundles' runtime behavior (tree-shaking won't remove the
     // check, but the spy globals never materialize without NODE_ENV=test).
-    ;(globalThis as unknown as TestGlobals).__dotAgentTest = {
+    (globalThis as unknown as TestGlobals).__dotAgentTest = {
       setHandlers,
     }
   }

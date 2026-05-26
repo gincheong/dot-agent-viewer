@@ -18,8 +18,8 @@ export default function App(): JSX.Element {
     if (!hasLoaded) {
       void rescan()
     }
-    // mount-only
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // mount-only — rescan and hasLoaded read via store getter on each call,
+    // so they don't need to be in deps.
   }, [])
 
   // ⌘R is dispatched by the main-process menu accelerator

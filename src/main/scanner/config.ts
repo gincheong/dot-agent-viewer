@@ -5,7 +5,6 @@
 // hub-grouping is disabled (originalsRoot effectively becomes null).
 
 import { promises as fs } from 'fs'
-import path from 'path'
 
 import {
   DEFAULT_AGENT_ROOTS,
