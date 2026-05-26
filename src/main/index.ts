@@ -91,6 +91,13 @@ app.whenReady().then(() => {
   buildApplicationMenu()
   createWindow()
 
+  // --smoke-exit: after the real boot path completes (window created, IPC wired),
+  // quit after a short delay so packaged-app smoke tests can confirm a clean launch.
+  if (process.argv.includes('--smoke-exit')) {
+    setTimeout(() => app.quit(), 2000)
+    return
+  }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
