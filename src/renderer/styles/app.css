@@ -239,6 +239,16 @@ input[type='search'] {
   color: var(--color-gemini-fg);
 }
 
+.agent-badge[data-agent='cursor'] {
+  background: var(--color-cursor-bg);
+  color: var(--color-cursor-fg);
+}
+
+.agent-badge[data-agent='codex'] {
+  background: var(--color-codex-bg);
+  color: var(--color-codex-fg);
+}
+
 /* Detail pane -------------------------------------------------------------- */
 .detail-pane {
   flex: 1 1 auto;

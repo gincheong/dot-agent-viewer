@@ -10,7 +10,7 @@ type Group = {
   items: SourceItem[]
 }
 
-const GROUP_ORDER: Provenance[] = ['agents-hub', 'agent-local', 'external-link']
+const GROUP_ORDER: Provenance[] = ['agents-hub', 'external-link']
 const GROUP_TITLES: Record<Provenance, string> = {
   'agents-hub': 'Hub originals',
   'agent-local': 'Agent-local files',
@@ -18,9 +18,10 @@ const GROUP_TITLES: Record<Provenance, string> = {
 }
 
 export function SourceList(): JSX.Element {
-  const sources = useAppStore((s) => s.sources)
+  const allSources = useAppStore((s) => s.sources)
   const search = useAppStore((s) => s.search)
 
+  const sources = allSources.filter((s) => s.provenance !== 'agent-local')
   const filtered = useFuse(sources, search)
 
   if (sources.length === 0) {

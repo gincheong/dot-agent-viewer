@@ -27,7 +27,12 @@ export type AgentRootScanResult = {
   warnings: ScanWarning[]
 }
 
-const IGNORE_PATTERNS = ['**/node_modules/**', '**/.git/**']
+const IGNORE_PATTERNS = [
+  '**/node_modules/**',
+  '**/.git/**',
+  '**/.omc/**',
+  '**/.omc',
+]
 
 function stripAgentRoot(config: AgentRootConfig): AgentRoot {
   return { name: config.name, path: config.path }

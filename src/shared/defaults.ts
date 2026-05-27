@@ -34,6 +34,16 @@ export const DEFAULT_AGENT_ROOTS: AgentRootConfig[] = [
       { glob: 'antigravity/skills/*', kind: 'skill' },
     ],
   },
+  {
+    name: 'Cursor',
+    path: expandHome('~/.cursor'),
+    scopes: [{ glob: 'skills/*', kind: 'skill' }],
+  },
+  {
+    name: 'Codex',
+    path: expandHome('~/.codex'),
+    scopes: [{ glob: 'skills/*', kind: 'skill' }],
+  },
 ]
 
 export const DEFAULT_USER_CONFIG: UserConfig = {

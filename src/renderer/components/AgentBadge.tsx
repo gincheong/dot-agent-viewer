@@ -6,7 +6,7 @@ type Props = {
 
 /**
  * Colored pill rendering the agent root name. Claude → blue, Gemini → green,
- * everything else → neutral grey.
+ * Cursor → purple, Codex → amber, everything else → neutral grey.
  */
 export function AgentBadge({ agentRoot }: Props): JSX.Element {
   const tone = toneFor(agentRoot.name)
@@ -17,9 +17,9 @@ export function AgentBadge({ agentRoot }: Props): JSX.Element {
   )
 }
 
+const KNOWN_TONES = new Set(['claude', 'gemini', 'cursor', 'codex'])
+
 function toneFor(name: string): string {
   const lower = name.toLowerCase()
-  if (lower === 'claude') return 'claude'
-  if (lower === 'gemini') return 'gemini'
-  return 'neutral'
+  return KNOWN_TONES.has(lower) ? lower : 'neutral'
 }

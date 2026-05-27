@@ -68,6 +68,10 @@
   --color-claude-fg: #1d4ed8;
   --color-gemini-bg: #d1fae5;
   --color-gemini-fg: #047857;
+  --color-cursor-bg: #ede9fe;
+  --color-cursor-fg: #6d28d9;
+  --color-codex-bg: #fef3c7;
+  --color-codex-fg: #b45309;
   --color-neutral-bg: #e5e7eb;
   --color-neutral-fg: #374151;
 }
@@ -105,6 +109,10 @@
   --color-claude-fg: #79b8ff;
   --color-gemini-bg: rgba(46, 160, 67, 0.2);
   --color-gemini-fg: #56d364;
+  --color-cursor-bg: rgba(167, 139, 250, 0.22);
+  --color-cursor-fg: #c4b5fd;
+  --color-codex-bg: rgba(245, 158, 11, 0.2);
+  --color-codex-fg: #fbbf24;
   --color-neutral-bg: #30363d;
   --color-neutral-fg: #c9d1d9;
 }

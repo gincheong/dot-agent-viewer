@@ -120,54 +120,56 @@ async function enumerateSkills(originalsRoot: string, index: OriginalsIndex): Pr
   if (!entries) return
 
   await Promise.all(
-    entries.map(async (e) => {
-      const skillRootPath = path.join(skillsDir, e)
-      const st = await safeStat(skillRootPath)
-      if (!st || !st.isDirectory()) return
+    entries
+      .filter((e) => e !== '.omc')
+      .map(async (e) => {
+        const skillRootPath = path.join(skillsDir, e)
+        const st = await safeStat(skillRootPath)
+        if (!st || !st.isDirectory()) return
 
-      const entryFile = await pickSkillEntry(skillRootPath)
-      if (entryFile) {
-        const entryAbs = path.join(skillRootPath, entryFile)
-        const parsed = await parseFrontmatterFile(entryAbs)
-        const item: SourceItem = {
-          kind: 'skill',
-          provenance: 'agents-hub',
-          name: e,
-          description: parsed.description,
-          absPath: entryAbs,
-          skillRootPath,
-          entryFile,
-          frontmatter: parsed.frontmatter,
-          frontmatterStatus: parsed.frontmatterStatus,
-          bodyMarkdown: parsed.bodyMarkdown,
-          symlinks: [],
+        const entryFile = await pickSkillEntry(skillRootPath)
+        if (entryFile) {
+          const entryAbs = path.join(skillRootPath, entryFile)
+          const parsed = await parseFrontmatterFile(entryAbs)
+          const item: SourceItem = {
+            kind: 'skill',
+            provenance: 'agents-hub',
+            name: e,
+            description: parsed.description,
+            absPath: entryAbs,
+            skillRootPath,
+            entryFile,
+            frontmatter: parsed.frontmatter,
+            frontmatterStatus: parsed.frontmatterStatus,
+            bodyMarkdown: parsed.bodyMarkdown,
+            symlinks: [],
+          }
+          if (parsed.frontmatterStatus === 'malformed') {
+            index.warnings.push({
+              kind: 'parse',
+              path: entryAbs,
+              message: parsed.error ?? 'malformed frontmatter',
+            })
+          }
+          index.items.push(item)
+          index.originalsByAbsPath.set(entryAbs, item)
+          index.originalsBySkillRoot.set(skillRootPath, item)
+        } else {
+          // Skill dir with no markdown — still emit a placeholder.
+          const item: SourceItem = {
+            kind: 'skill',
+            provenance: 'agents-hub',
+            name: e,
+            absPath: skillRootPath,
+            skillRootPath,
+            frontmatter: {},
+            frontmatterStatus: 'absent',
+            bodyMarkdown: '',
+            symlinks: [],
+          }
+          index.items.push(item)
+          index.originalsBySkillRoot.set(skillRootPath, item)
         }
-        if (parsed.frontmatterStatus === 'malformed') {
-          index.warnings.push({
-            kind: 'parse',
-            path: entryAbs,
-            message: parsed.error ?? 'malformed frontmatter',
-          })
-        }
-        index.items.push(item)
-        index.originalsByAbsPath.set(entryAbs, item)
-        index.originalsBySkillRoot.set(skillRootPath, item)
-      } else {
-        // Skill dir with no markdown — still emit a placeholder.
-        const item: SourceItem = {
-          kind: 'skill',
-          provenance: 'agents-hub',
-          name: e,
-          absPath: skillRootPath,
-          skillRootPath,
-          frontmatter: {},
-          frontmatterStatus: 'absent',
-          bodyMarkdown: '',
-          symlinks: [],
-        }
-        index.items.push(item)
-        index.originalsBySkillRoot.set(skillRootPath, item)
-      }
-    })
+      })
   )
 }
