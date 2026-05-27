@@ -11,6 +11,7 @@
 //     globalShortcut, which fires app-wide).
 
 import { app, BrowserWindow, Menu, type MenuItemConstructorOptions } from 'electron'
+import windowStateKeeper from 'electron-window-state'
 import { join } from 'path'
 
 import { EVENTS } from '../shared/ipc'
@@ -18,9 +19,19 @@ import { installDefaultHandlers } from './actions'
 import { registerIpcHandlers } from './ipc'
 
 function createWindow(): void {
+  // Persists window size/position (and maximize state) under userData, restoring
+  // it on the next launch. Falls back to the defaults below on first run or if the
+  // saved bounds land off-screen.
+  const windowState = windowStateKeeper({
+    defaultWidth: 900,
+    defaultHeight: 640,
+  })
+
   const win = new BrowserWindow({
-    width: 900,
-    height: 640,
+    x: windowState.x,
+    y: windowState.y,
+    width: windowState.width,
+    height: windowState.height,
     title: 'dot-agent-viewer',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -28,6 +39,9 @@ function createWindow(): void {
       nodeIntegration: false,
     },
   })
+
+  // Hooks resize/move/close/maximize listeners and writes the state to disk.
+  windowState.manage(win)
 
   if (process.env.ELECTRON_RENDERER_URL) {
     win.loadURL(process.env.ELECTRON_RENDERER_URL)

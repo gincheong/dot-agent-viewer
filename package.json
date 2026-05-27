@@ -19,6 +19,7 @@
     "smoke": "bash scripts/smoke.sh"
   },
   "dependencies": {
+    "electron-window-state": "^5.0.3",
     "fast-glob": "^3.3.3",
     "fuse.js": "^7.3.0",
     "gray-matter": "^4.0.3",
