@@ -2,9 +2,13 @@ import { create } from 'zustand'
 
 import type {
   AgentRoot,
+  PluginEntry,
+  PluginItem,
   ScanResult,
   SourceItem,
 } from '../../shared/types'
+
+export type ActiveTab = 'sources' | 'plugins'
 
 export type AppState = {
   sources: SourceItem[]
@@ -14,6 +18,11 @@ export type AppState = {
   scannedAt: number | null
   loading: boolean
   error: string | null
+  activeTab: ActiveTab
+  plugins: PluginEntry[]
+  pluginsLoaded: boolean
+  pluginsLoading: boolean
+  selectedPluginItem: PluginItem | null
 }
 
 export type AppActions = {
@@ -21,6 +30,9 @@ export type AppActions = {
   setSearch: (s: string) => void
   replaceAll: (result: ScanResult) => void
   rescan: () => Promise<void>
+  setActiveTab: (tab: ActiveTab) => void
+  loadPlugins: () => Promise<void>
+  selectPluginItem: (item: PluginItem | null) => void
 }
 
 export type AppStore = AppState & AppActions
@@ -210,9 +222,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
   scannedAt: null,
   loading: false,
   error: null,
+  activeTab: 'sources',
+  plugins: [],
+  pluginsLoaded: false,
+  pluginsLoading: false,
+  selectedPluginItem: null,
 
   // actions
-  select: (absPath) => set({ selectedAbsPath: absPath }),
+  select: (absPath) => set({ selectedAbsPath: absPath, selectedPluginItem: null }),
   setSearch: (s) => set({ search: s }),
   replaceAll: (result) =>
     set({
@@ -220,6 +237,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
       agents: result.agents,
       scannedAt: result.scannedAt,
     }),
+  setActiveTab: (tab) => set({ activeTab: tab }),
+  selectPluginItem: (item) => set({ selectedPluginItem: item, selectedAbsPath: null }),
+  loadPlugins: async () => {
+    if (typeof window === 'undefined' || !window.dotAgent) return
+    if (get().pluginsLoading) return
+    set({ pluginsLoading: true })
+    try {
+      const result = await window.dotAgent.listPlugins()
+      set({ plugins: result.plugins, pluginsLoaded: true, pluginsLoading: false })
+    } catch {
+      set({ pluginsLoading: false })
+    }
+  },
   rescan: async () => {
     // Test-mode short-circuit: Playwright's `addInitScript` injects a known
     // ScanResult onto `window.__testScanResult` to bypass IPC. Check this

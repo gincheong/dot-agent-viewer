@@ -10,6 +10,7 @@ import type {
   ActionCopyPathResponse,
   ActionOpenEditorResponse,
   ConfigGetRootsResponse,
+  PluginsListResponse,
   ScannerRescanResponse,
   ScannerStatusResponse,
   SystemAppearanceChangedEvent,
@@ -26,6 +27,7 @@ export type DotAgentApi = {
   copyPath: (absPath: string) => Promise<ActionCopyPathResponse>
   copyBody: (body: string) => Promise<ActionCopyBodyResponse>
   getAppearance: () => Promise<SystemAppearanceResponse>
+  listPlugins: () => Promise<PluginsListResponse>
   onAppearanceChanged: (
     cb: (payload: SystemAppearanceChangedEvent) => void,
   ) => UnsubscribeFn

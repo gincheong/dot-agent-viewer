@@ -13,11 +13,13 @@ import type {
   ActionOpenEditorRequest,
   ActionOpenEditorResponse,
   ConfigGetRootsResponse,
+  PluginsListResponse,
   ScannerRescanResponse,
   ScannerStatusResponse,
   SystemAppearanceResponse,
 } from '../shared/ipc'
 import { getHandlers } from './actions'
+import { listPlugins } from './plugins'
 import { loadUserConfig } from './scanner/config'
 import { runScan } from './scanner'
 
@@ -118,4 +120,8 @@ export function registerIpcHandlers(): void {
     nativeTheme.on('updated', broadcastAppearance)
     appearanceListenerAttached = true
   }
+
+  ipcMain.handle(IPC.PLUGINS_LIST, async (): Promise<PluginsListResponse> => {
+    return listPlugins()
+  })
 }

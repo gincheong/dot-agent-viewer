@@ -9,6 +9,7 @@ import type {
   ActionCopyPathResponse,
   ActionOpenEditorResponse,
   ConfigGetRootsResponse,
+  PluginsListResponse,
   ScannerRescanResponse,
   ScannerStatusResponse,
   SystemAppearanceChangedEvent,
@@ -25,6 +26,7 @@ export type DotAgentApi = {
   copyPath: (absPath: string) => Promise<ActionCopyPathResponse>
   copyBody: (body: string) => Promise<ActionCopyBodyResponse>
   getAppearance: () => Promise<SystemAppearanceResponse>
+  listPlugins: () => Promise<PluginsListResponse>
   onAppearanceChanged: (
     cb: (payload: SystemAppearanceChangedEvent) => void,
   ) => UnsubscribeFn
@@ -39,6 +41,7 @@ const api: DotAgentApi = {
   copyPath: (absPath) => ipcRenderer.invoke(IPC.ACTION_COPY_PATH, { absPath }),
   copyBody: (body) => ipcRenderer.invoke(IPC.ACTION_COPY_BODY, { body }),
   getAppearance: () => ipcRenderer.invoke(IPC.SYSTEM_APPEARANCE),
+  listPlugins: () => ipcRenderer.invoke(IPC.PLUGINS_LIST),
   onAppearanceChanged: (cb) => {
     const listener = (
       _e: Electron.IpcRendererEvent,

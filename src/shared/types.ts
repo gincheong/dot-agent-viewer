@@ -73,6 +73,36 @@ export type ScanResult = {
   warnings: ScanWarning[]
 }
 
+export type PluginScope = 'user' | 'project'
+
+export type PluginItem = {
+  kind: SourceKind
+  name: string
+  pluginId: string // e.g. 'oh-my-claudecode@omc'
+  absPath: string
+  skillRootPath?: string
+  entryFile?: string
+  frontmatter: Record<string, unknown>
+  frontmatterStatus: FrontmatterStatus
+  bodyMarkdown: string
+  description?: Description
+}
+
+export type PluginEntry = {
+  id: string // e.g. 'oh-my-claudecode@omc'
+  name: string // e.g. 'oh-my-claudecode'
+  marketplace: string // e.g. 'omc'
+  version: string
+  scope: PluginScope
+  projectPath?: string // only for project-scoped installs
+  installPath: string
+  items: PluginItem[]
+}
+
+export type PluginsResult = {
+  plugins: PluginEntry[]
+}
+
 export type UserConfig = {
   originalsRoot: string | null // absolute; null disables hub-grouping
   roots: AgentRootConfig[]

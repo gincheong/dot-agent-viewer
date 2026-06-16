@@ -1,7 +1,7 @@
 // IPC channel name constants + request/response payload types.
 // See plan §2 for the channel map.
 
-import type { AgentRootConfig, ScanResult } from './types'
+import type { AgentRootConfig, PluginsResult, ScanResult } from './types'
 
 export const IPC = {
   SCANNER_RESCAN: 'scanner:rescan',
@@ -11,6 +11,7 @@ export const IPC = {
   ACTION_COPY_PATH: 'action:copy-path',
   ACTION_COPY_BODY: 'action:copy-body',
   SYSTEM_APPEARANCE: 'system:appearance',
+  PLUGINS_LIST: 'plugins:list',
 } as const
 
 // One-way event channels (main → renderer via webContents.send).
@@ -54,6 +55,9 @@ export type ActionCopyBodyResponse = { ok: true }
 export type SystemAppearanceRequest = void
 export type SystemAppearanceResponse = { theme: 'light' | 'dark' }
 
+export type PluginsListRequest = void
+export type PluginsListResponse = PluginsResult
+
 // Aggregate channel→payload map used for type-safe IPC handlers/clients.
 export type IpcChannels = {
   [IPC.SCANNER_RESCAN]: {
@@ -83,5 +87,9 @@ export type IpcChannels = {
   [IPC.SYSTEM_APPEARANCE]: {
     req: SystemAppearanceRequest
     res: SystemAppearanceResponse
+  }
+  [IPC.PLUGINS_LIST]: {
+    req: PluginsListRequest
+    res: PluginsListResponse
   }
 }

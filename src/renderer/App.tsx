@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 
 import { DetailPane } from './components/DetailPane'
+import { PluginDetailPane } from './components/PluginDetailPane'
 import { Sidebar } from './components/Sidebar'
 import { useAppearance } from './hooks/useAppearance'
 import { useAppStore } from './store/useAppStore'
@@ -10,6 +11,8 @@ export default function App(): JSX.Element {
 
   const rescan = useAppStore((s) => s.rescan)
   const hasLoaded = useAppStore((s) => s.scannedAt !== null)
+  const activeTab = useAppStore((s) => s.activeTab)
+  const selectedPluginItem = useAppStore((s) => s.selectedPluginItem)
 
   // Boot scan: pull real data via IPC (or the Playwright test-result fixture
   // injected onto window) once on mount. Subsequent rescans (⌘R, Refresh)
@@ -37,7 +40,11 @@ export default function App(): JSX.Element {
   return (
     <div className="app-shell">
       <Sidebar />
-      <DetailPane />
+      {activeTab === 'plugins' && selectedPluginItem ? (
+        <PluginDetailPane />
+      ) : (
+        <DetailPane />
+      )}
     </div>
   )
 }

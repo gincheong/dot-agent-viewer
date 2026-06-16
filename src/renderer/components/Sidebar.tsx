@@ -1,18 +1,26 @@
+import { useEffect } from 'react'
+
+import { PluginList } from './PluginList'
 import { ScanStaleLabel } from './ScanStaleLabel'
 import { SearchBar } from './SearchBar'
 import { SourceList } from './SourceList'
 import { useAppStore } from '../store/useAppStore'
 
-/**
- * Left pane: top bar (stale label + refresh button) + search + source list.
- * ⌘R wiring lives in App; the RefreshButton here is a passive placeholder
- * that Phase E will wire to `window.dotAgent.rescan()`.
- */
 export function Sidebar(): JSX.Element {
   const loading = useAppStore((s) => s.loading)
   const empty = useAppStore((s) => s.sources.length === 0)
   const showShimmer = loading && empty
   const rescan = useAppStore((s) => s.rescan)
+  const activeTab = useAppStore((s) => s.activeTab)
+  const setActiveTab = useAppStore((s) => s.setActiveTab)
+  const loadPlugins = useAppStore((s) => s.loadPlugins)
+  const pluginsLoaded = useAppStore((s) => s.pluginsLoaded)
+
+  useEffect(() => {
+    if (activeTab === 'plugins' && !pluginsLoaded) {
+      void loadPlugins()
+    }
+  }, [activeTab, pluginsLoaded, loadPlugins])
 
   return (
     <aside className="sidebar" aria-label="Source list">
@@ -29,9 +37,31 @@ export function Sidebar(): JSX.Element {
           </button>
         </div>
         <SearchBar />
+        <div className="sidebar__tabs">
+          <button
+            type="button"
+            className="sidebar__tab"
+            data-active={activeTab === 'sources'}
+            onClick={() => setActiveTab('sources')}
+          >
+            Sources
+          </button>
+          <button
+            type="button"
+            className="sidebar__tab"
+            data-active={activeTab === 'plugins'}
+            onClick={() => setActiveTab('plugins')}
+          >
+            Plugins (Claude)
+          </button>
+        </div>
       </div>
       <div className="sidebar__scroll">
-        {showShimmer ? <ListShimmer /> : <SourceList />}
+        {activeTab === 'sources' ? (
+          showShimmer ? <ListShimmer /> : <SourceList />
+        ) : (
+          <PluginList />
+        )}
       </div>
     </aside>
   )
